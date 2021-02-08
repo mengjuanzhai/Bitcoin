@@ -1,9 +1,6 @@
 package main
 
-//创建区块链，使用数组进行模拟
-type Blockchain struct {
-	blocks []*Block
-}
+const GENENISISINFO = "The Times 08/Feb/2021 Chancellor on brink of second bailout for banks"
 
 //实现创建区块链的方法
 func NewBlockchain() *Blockchain {

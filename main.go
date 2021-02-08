@@ -13,7 +13,6 @@ import (
 //4、引入区块链
 //5、添加区块
 //6、重构代码
-const GENENISISINFO = "The Times 08/Feb/2021 Chancellor on brink of second bailout for banks"
 
 func main() {
 	bc := NewBlockchain()

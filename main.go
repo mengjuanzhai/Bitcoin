@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/sha256"
 	"fmt"
 )
 
@@ -28,8 +29,18 @@ func NewBlock(data string, prevBlockHash []byte) *Block {
 		Hash:          []byte{}, //先填充为空，后续填充数据
 		Data:          []byte(data),
 	}
+	block.setHash()
 	return &block
 
+}
+
+//为了生成哈希，我们实现一个简单的函数，来计算哈希值，没有随机值，没有难度值
+func (block *Block) setHash() {
+	data := []byte{}
+	data = append(data, block.PrevBlockHash...)
+	data = append(data, block.Data...)
+	hash := sha256.Sum256(data)
+	block.Hash = hash[:]
 }
 
 func main() {

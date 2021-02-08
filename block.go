@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"time"
 )
@@ -26,7 +27,7 @@ func NewBlock(data string, prevBlockHash []byte) *Block {
 		MerkleRoot:    []byte{},
 		Timestamp:     uint64(time.Now().Unix()),
 		Difficulity:   10, //v2再调整
-		Nonce:         10,
+		Nonce:         9,
 		Hash:          []byte{}, //先填充为空，后续填充数据
 		Data:          []byte(data),
 	}
@@ -36,14 +37,27 @@ func NewBlock(data string, prevBlockHash []byte) *Block {
 
 //为了生成哈希，我们实现一个简单的函数，来计算哈希值，没有随机值，没有难度值
 func (block *Block) setHash() {
-	data := []byte{}
-	data = append(data, (uintToByte(block.Version))...)
-	data = append(data, block.PrevBlockHash...)
-	data = append(data, block.MerkleRoot...)
-	data = append(data, (uintToByte(block.Timestamp))...)
-	data = append(data, (uintToByte(block.Difficulity))...)
-	data = append(data, (uintToByte(block.Nonce))...)
-	data = append(data, block.Data...)
+	var data []byte
+	/*
+		data = append(data, (uintToByte(block.Version))...)
+		data = append(data, block.PrevBlockHash...)
+		data = append(data, block.MerkleRoot...)
+		data = append(data, (uintToByte(block.Timestamp))...)
+		data = append(data, (uintToByte(block.Difficulity))...)
+		data = append(data, (uintToByte(block.Nonce))...)
+		data = append(data, block.Data...)
+	*/
+	//使用bytes.Join方法对以上冗余代码进行优化
+	dataTmp := [][]byte{
+		uintToByte(block.Version),
+		block.PrevBlockHash,
+		block.MerkleRoot,
+		uintToByte(block.Timestamp),
+		uintToByte(block.Difficulity),
+		uintToByte(block.Nonce),
+		block.Data,
+	}
+	data = bytes.Join(dataTmp, []byte{})
 	hash := sha256.Sum256(data)
 	block.Hash = hash[:]
 }

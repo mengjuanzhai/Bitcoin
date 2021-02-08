@@ -14,6 +14,7 @@ import (
 //4、引入区块链
 //5、添加区块
 //6、重构代码
+const GENENISISINFO = "The Times 08/Feb/2021 Chancellor on brink of second bailout for banks"
 
 type Block struct {
 	PrevBlockHash []byte //前一哈希值
@@ -31,6 +32,18 @@ func NewBlock(data string, prevBlockHash []byte) *Block {
 	}
 	block.setHash()
 	return &block
+}
+
+//创建区块链，使用数组进行模拟
+type Blockchain struct {
+	blocks []*Block
+}
+
+//实现创建区块链的方法
+func NewBlockchain() *Blockchain {
+	genesisBlock := NewBlock(GENENISISINFO, []byte{0x000000000000})
+	bc := Blockchain{blocks: []*Block{genesisBlock}}
+	return &bc
 
 }
 
@@ -43,13 +56,22 @@ func (block *Block) setHash() {
 	block.Hash = hash[:]
 }
 
-func main() {
-	data := "hello world"
-	var prevBlockHash []byte = []byte{0x0000000000000000}
+//添加区块
+func (bc *Blockchain) addBlock(data string) {
+	lastBlock := bc.blocks[len(bc.blocks)-1]
+	prevBlockHash := lastBlock.Hash
 	block := NewBlock(data, prevBlockHash)
-	fmt.Printf("PrevBlockHash:%x\n", block.PrevBlockHash)
-	fmt.Printf("Hash:%x\n", block.Hash)
-	fmt.Printf("Data:%x\n", block.Data)
-	fmt.Println("hello world")
+	bc.blocks = append(bc.blocks, block)
+}
+
+func main() {
+	bc := NewBlockchain()
+	bc.addBlock("第二个区块")
+	for i, block := range bc.blocks {
+		fmt.Printf("--------------+%d+------------------\n", i)
+		fmt.Printf("PrevBlockHash:%x\n", block.PrevBlockHash)
+		fmt.Printf("Hash:%x\n", block.Hash)
+		fmt.Printf("Data:%x\n", block.Data)
+	}
 
 }

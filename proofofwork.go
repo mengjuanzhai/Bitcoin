@@ -28,7 +28,8 @@ func NewProofOfWork(block *Block) *ProofOfWork {
 		block: block,
 	}
 	//写难度值，难度值应该是推导出来的，但是我们为了简化，把难度值写成固定的，一切完成后再推导
-	powStr := "0001000000000000000000000000000000000000000000000000000000000000"
+	//powStr := "0001000000000000000000000000000000000000000000000000000000000000"
+	//
 	var bigIntTmp big.Int
 	bigIntTmp.SetString(powStr, 16)
 	pow.target = &bigIntTmp

@@ -65,7 +65,3 @@ func (block *Block) setHash() {
 	block.Hash = hash[:]
 }
 */
-//创建区块链，使用数组进行模拟
-type Blockchain struct {
-	blocks []*Block
-}

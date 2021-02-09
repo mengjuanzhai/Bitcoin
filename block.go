@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"crypto/sha256"
 	"time"
 )
 
@@ -27,26 +25,31 @@ func NewBlock(data string, prevBlockHash []byte) *Block {
 		MerkleRoot:    []byte{},
 		Timestamp:     uint64(time.Now().Unix()),
 		Difficulity:   10, //v2再调整
-		Nonce:         9,
+		Nonce:         10,
 		Hash:          []byte{}, //先填充为空，后续填充数据
 		Data:          []byte(data),
 	}
-	block.setHash()
+	pow := NewProofOfWork(&block)
+	hash, nonce := pow.Run()
+	block.Nonce = nonce
+	block.Hash = hash
+
 	return &block
 }
 
 //为了生成哈希，我们实现一个简单的函数，来计算哈希值，没有随机值，没有难度值
+/*
 func (block *Block) setHash() {
 	var data []byte
-	/*
-		data = append(data, (uintToByte(block.Version))...)
-		data = append(data, block.PrevBlockHash...)
-		data = append(data, block.MerkleRoot...)
-		data = append(data, (uintToByte(block.Timestamp))...)
-		data = append(data, (uintToByte(block.Difficulity))...)
-		data = append(data, (uintToByte(block.Nonce))...)
-		data = append(data, block.Data...)
-	*/
+
+	//data = append(data, (uintToByte(block.Version))...)
+	//data = append(data, block.PrevBlockHash...)
+	//data = append(data, block.MerkleRoot...)
+	//data = append(data, (uintToByte(block.Timestamp))...)
+	//data = append(data, (uintToByte(block.Difficulity))...)
+	//data = append(data, (uintToByte(block.Nonce))...)
+	//data = append(data, block.Data...)
+
 	//使用bytes.Join方法对以上冗余代码进行优化
 	dataTmp := [][]byte{
 		uintToByte(block.Version),
@@ -61,7 +64,7 @@ func (block *Block) setHash() {
 	hash := sha256.Sum256(data)
 	block.Hash = hash[:]
 }
-
+*/
 //创建区块链，使用数组进行模拟
 type Blockchain struct {
 	blocks []*Block

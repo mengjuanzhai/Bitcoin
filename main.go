@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 //1、定义结构，区块链的字段比正常少
 //a、当前哈希值
@@ -20,11 +23,15 @@ func main() {
 		fmt.Printf("Version:%x\n", block.Version)
 		fmt.Printf("PrevBlockHash:%x\n", block.PrevBlockHash)
 		fmt.Printf("MerkleRoot:%x\n", block.MerkleRoot)
-		fmt.Printf("Timestamp:%x\n", block.Timestamp)
+		//优化时间打印，定义时间显示格式
+		timeFormat := time.Unix(int64(block.Timestamp), 0).Format("2006-01-02 15:01:05")
+		fmt.Printf("Timestamp:%s\n", timeFormat)
 		fmt.Printf("Difficulity:%x\n", block.Difficulity)
 		fmt.Printf("Nonce:%x\n", block.Nonce)
 		fmt.Printf("Hash:%x\n", block.Hash)
-		fmt.Printf("Data:%x\n", block.Data)
+		fmt.Printf("Data:%s\n", block.Data)
+		pow := NewProofOfWork(block)
+		fmt.Printf("IsVaild:%v\n", pow.IsValid())
 	}
 
 }

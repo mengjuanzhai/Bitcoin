@@ -28,7 +28,7 @@ func NewProofOfWork(block *Block) *ProofOfWork {
 		block: block,
 	}
 	//写难度值，难度值应该是推导出来的，但是我们为了简化，把难度值写成固定的，一切完成后再推导
-	powStr := "0000100000000000000000000000000000000000000000000000000000000000"
+	powStr := "0001000000000000000000000000000000000000000000000000000000000000"
 	var bigIntTmp big.Int
 	bigIntTmp.SetString(powStr, 16)
 	pow.target = &bigIntTmp
@@ -47,14 +47,15 @@ func (pow *ProofOfWork) Run() ([]byte, uint64) {
 	//b、哈希函数小于难度值，挖矿成功，返回哈希值及随机数
 	for {
 		data := pow.preparedData(nonce)
-		hash := sha256.Sum256(data)
+		hash = sha256.Sum256(data)
+		fmt.Printf("%x\r", hash)
 		//将hash（[]byte类型）转为big.Int，然后与pow.target进行比较，需要引入局部变量
 		var bigIntTemp big.Int
 		bigIntTemp.SetBytes(hash[:])
 		res := bigIntTemp.Cmp(pow.target)
-		if res == -1 && res == 0 {
+		if res == -1 {
 			//此时x<y，表示挖矿成功
-			fmt.Printf("挖矿成功！nonce = %x,hash = %x", nonce, hash)
+			fmt.Printf("挖矿成功！nonce = %x,hash = %x\n", nonce, hash)
 			break
 		} else {
 			nonce++
@@ -78,4 +79,14 @@ func (pow *ProofOfWork) preparedData(nonce uint64) []byte {
 	data := bytes.Join(dataTmp, []byte{})
 	return data
 
+}
+
+//IsValid 校验函数:校验一下，Hash，block数据和Nonce是否满足难度值要求
+func (pow *ProofOfWork) IsValid() bool {
+	data := pow.preparedData(pow.block.Nonce)
+	hash := sha256.Sum256(data)
+	var tmpBigInt big.Int
+	tmpBigInt.SetBytes(hash[:])
+	return tmpBigInt.Cmp(pow.target) == -1
+	//true 表示想x<y
 }

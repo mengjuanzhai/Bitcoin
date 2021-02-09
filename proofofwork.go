@@ -23,16 +23,22 @@ type ProofOfWork struct {
 	target *big.Int //系统提供的，是固定的
 }
 
+const BITS = 16
+
 func NewProofOfWork(block *Block) *ProofOfWork {
 	pow := ProofOfWork{
 		block: block,
 	}
 	//写难度值，难度值应该是推导出来的，但是我们为了简化，把难度值写成固定的，一切完成后再推导
 	//powStr := "0001000000000000000000000000000000000000000000000000000000000000"
-	//
-	var bigIntTmp big.Int
-	bigIntTmp.SetString(powStr, 16)
-	pow.target = &bigIntTmp
+	//固定难度值
+	//16进制格式的字符串
+	//var bigIntTmp big.Int
+	//bigIntTmp.SetString(powStr, 16)
+	//pow.target = &bigIntTmp
+	bigIntTmp := big.NewInt(1)
+	bigIntTmp.Lsh(bigIntTmp, 256-BITS)
+	pow.target = bigIntTmp
 	return &pow
 }
 

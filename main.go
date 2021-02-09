@@ -1,10 +1,5 @@
 package main
 
-import (
-	"fmt"
-	"time"
-)
-
 //1、定义结构，区块链的字段比正常少
 //a、当前哈希值
 //b、前一区块的哈希值
@@ -17,7 +12,8 @@ import (
 
 func main() {
 	bc := NewBlockchain()
-	bc.addBlock("第二个区块")
+	bc.db.Close()
+	/*bc.addBlock("第二个区块")
 	for i, block := range bc.blocks {
 		fmt.Printf("--------------+%d+------------------\n", i)
 		fmt.Printf("Version:%x\n", block.Version)
@@ -32,6 +28,6 @@ func main() {
 		fmt.Printf("Data:%s\n", block.Data)
 		pow := NewProofOfWork(block)
 		fmt.Printf("IsVaild:%v\n", pow.IsValid())
-	}
+	}*/
 
 }

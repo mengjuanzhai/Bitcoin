@@ -1,6 +1,10 @@
 package main
 
 import (
+	"bytes"
+	"encoding/gob"
+	"fmt"
+	"log"
 	"time"
 )
 
@@ -35,6 +39,32 @@ func NewBlock(data string, prevBlockHash []byte) *Block {
 	block.Hash = hash
 
 	return &block
+}
+
+//序列化，将区块转换为字节流
+func (block *Block) Serialize() []byte {
+	var buffer bytes.Buffer
+	encoder := gob.NewEncoder(&buffer)
+	err := encoder.Encode(block)
+	if err != nil {
+		log.Panic(err)
+	}
+	return buffer.Bytes()
+
+}
+
+//反序列化，将字节流转化为Block区块类型
+
+func Deserialize(data []byte) *Block {
+	fmt.Printf("解码传入的数据:%x\n", data)
+	var block Block
+	decoder := gob.NewDecoder(bytes.NewReader(data))
+	err := decoder.Decode(block)
+	if err != nil {
+		log.Panic(err)
+	}
+	return &block
+
 }
 
 //为了生成哈希，我们实现一个简单的函数，来计算哈希值，没有随机值，没有难度值

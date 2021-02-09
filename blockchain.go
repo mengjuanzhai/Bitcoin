@@ -59,10 +59,12 @@ func NewBlockchain() *Blockchain {
 			}
 			//写入创世块
 			genesisBlock := NewBlock(GENENISISINFO, []byte{})
-			b.Put(genesisBlock.Hash, genesisBlock.toBytes()) //将区块链序列化，转换为字节流
+			b.Put(genesisBlock.Hash, genesisBlock.Serialize()) //将区块链序列化，转换为字节流
 			//写入lastHashKey这条数据
 			b.Put([]byte("lastHashKey"), genesisBlock.Hash)
 			tail = genesisBlock.Hash
+			blockInfo := b.Get(genesisBlock.Hash)
+			fmt.Println("解码后的数据：", Deserialize(blockInfo))
 		} else {
 			tail = b.Get([]byte("lastHashKey"))
 		}

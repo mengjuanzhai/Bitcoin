@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/gob"
-	"fmt"
 	"log"
 	"time"
 )
@@ -56,10 +55,9 @@ func (block *Block) Serialize() []byte {
 //反序列化，将字节流转化为Block区块类型
 
 func Deserialize(data []byte) *Block {
-	fmt.Printf("解码传入的数据:%x\n", data)
 	var block Block
 	decoder := gob.NewDecoder(bytes.NewReader(data))
-	err := decoder.Decode(block)
+	err := decoder.Decode(&block)
 	if err != nil {
 		log.Panic(err)
 	}

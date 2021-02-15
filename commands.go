@@ -28,7 +28,7 @@ func (cli *CLI) printBlock() {
 		fmt.Printf("Difficulity:%x\n", block.Difficulity)
 		fmt.Printf("Nonce:%x\n", block.Nonce)
 		fmt.Printf("Hash:%x\n", block.Hash)
-		//fmt.Printf("Transactions:%v\n", block.Transactions)//TODO
+		fmt.Printf("Data:%v\n", block.Transactions[0].TXInputs[0].Address)
 		pow := NewProofOfWork(block)
 		fmt.Printf("IsVaild:%v\n", pow.IsValid())
 		if bytes.Equal(block.PrevBlockHash, []byte{}) {
@@ -37,4 +37,20 @@ func (cli *CLI) printBlock() {
 		}
 	}
 
+}
+
+func (cli *CLI) Send(from, to string, amount float64, miner string, data string) {
+	//创建挖矿交易
+	coinbase := NewCoinbaseTX(miner, data)
+	//创建普通交易
+	txs := []*Transaction{coinbase}
+	tx := NewTransaction(from, to, amount, cli.bc)
+	if tx != nil {
+		txs = append(txs, tx)
+	} else {
+		fmt.Printf("发现无效交易，过滤！\n")
+	}
+	//添加到区块
+	cli.AddBlock([]*Transaction{coinbase, tx})
+	fmt.Printf("挖矿成功！\n")
 }

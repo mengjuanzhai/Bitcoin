@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 )
 
 //使用命令行分析
@@ -24,6 +25,7 @@ const Usage = `
 	./blockchain addBlock "xxxxxx" 添加数据到区块链
 	./blockchain printBlock 打印区块链
 	./blockchain getBalance 地址 获取地址的余额
+	./blockchain send FROM TO AMOUNT MINER  DATA 转账命令
 `
 
 type CLI struct {
@@ -53,7 +55,20 @@ func (cli *CLI) Run() {
 	case "getBalance":
 		fmt.Printf("获取余额命令被调用\n")
 		cli.bc.GetBanlance(cmds[2])
+	case "send":
+		fmt.Printf("转账命令被调用\n")
+		if len(cmds) != 7 {
+			fmt.Printf("send命令发现无效参数，请检查！\n")
+			fmt.Println(Usage)
+			os.Exit(1)
 
+		}
+		from := cmds[2]
+		to := cmds[3]
+		amount, _ := strconv.ParseFloat(cmds[4], 64)
+		miner := cmds[5]
+		data := cmds[6]
+		cli.Send(from, to, amount, miner, data)
 	default:
 		fmt.Printf("无效的命令，请检查!\n")
 		fmt.Printf(Usage)

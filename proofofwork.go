@@ -81,12 +81,13 @@ func (pow *ProofOfWork) preparedData(nonce uint64) []byte {
 		uintToByte(block.Timestamp),
 		uintToByte(block.Difficulity),
 		uintToByte(nonce),
-		block.Data,
+		//block.Data
 	}
 	data := bytes.Join(dataTmp, []byte{})
 	return data
-
 }
+
+//更正：比特币取哈希值，并不是对整个区块取哈希，而是对区块头取哈希
 
 //IsValid 校验函数:校验一下，Hash，block数据和Nonce是否满足难度值要求
 func (pow *ProofOfWork) IsValid() bool {

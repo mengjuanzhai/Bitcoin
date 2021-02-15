@@ -23,7 +23,7 @@ type Blockchain struct {
 var tail []byte
 
 //实现创建区块链的方法
-func NewBlockchain() *Blockchain {
+func NewBlockchain(miner string) *Blockchain {
 	//功能分析：
 	//1、获得数据库句柄，打开数据库，读取数据
 	db, err := bolt.Open(BLOCKCHAINNAME, 0600, nil)
@@ -41,7 +41,10 @@ func NewBlockchain() *Blockchain {
 				log.Panic()
 			}
 			//写入创世块
-			genesisBlock := NewBlock(GENENISISINFO, []byte{})
+			//创世块中只有一个挖矿交易，只有Coinbase
+			coinbase := NewCoinbaseTX(miner)
+
+			genesisBlock := NewBlock([]*Transaction{coinbase}, []byte{})
 			b.Put(genesisBlock.Hash, genesisBlock.Serialize()) //将区块链序列化，转换为字节流
 			//写入lastHashKey这条数据
 			b.Put([]byte(LASTHASHKEY), genesisBlock.Hash)
@@ -68,13 +71,13 @@ func NewBlockchain() *Blockchain {
 }
 
 //添加区块
-func (bc *Blockchain) addBlock(data string) {
+func (bc *Blockchain) addBlock(txs []*Transaction) {
 	bc.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(BLOCKBUCKET))
 		if b == nil {
 			os.Exit(1)
 		}
-		block := NewBlock(data, bc.tail)
+		block := NewBlock(txs, bc.tail)
 		b.Put(block.Hash, block.Serialize())
 		b.Put([]byte(LASTHASHKEY), block.Hash)
 		bc.tail = block.Hash
@@ -118,6 +121,36 @@ func (it *BlockchainIterator) Next() *Block {
 	}
 	return &block
 
+}
+
+//计算余额
+//实现思路
+
+func (bc *Blockchain) FindMyUtoxs(address string) []TXoutput {
+	fmt.Printf("FindMyUtoxs\n")
+	//TODO
+	//1、遍历账本
+	it := bc.NewIterator()
+	for {
+		block := it.Next()
+		//2、遍历交易
+		for _, tx := range block.Transactions {
+
+		}
+
+	}
+
+	//3、遍历output
+	//4、找到属于我的所有output
+	return []TXoutput{}
+}
+func (bc *Blockchain) GetBanlance(address string) {
+	utxos := bc.FindMyUtoxs(address)
+	var total = 0.0
+	for _, utxo := range utxos {
+		total += utxo.Value
+	}
+	fmt.Printf("%s的余额为：%f\n", address, total)
 }
 
 /*

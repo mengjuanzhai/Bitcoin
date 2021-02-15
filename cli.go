@@ -23,6 +23,7 @@ import (
 const Usage = `
 	./blockchain addBlock "xxxxxx" 添加数据到区块链
 	./blockchain printBlock 打印区块链
+	./blockchain getBalance 地址 获取地址的余额
 `
 
 type CLI struct {
@@ -39,13 +40,20 @@ func (cli *CLI) Run() {
 	}
 	switch cmds[1] {
 	case "addBlock":
-		for i := 2; i < len(cmds)-1; i++ {
-			fmt.Printf("添加区块链命令被调用，数据%s\n", cmds[i])
-			cli.AddBlock(cmds[i])
+		if len(cmds) != 3 {
+			fmt.Println(Usage)
+			os.Exit(1)
 		}
+		fmt.Printf("添加区块链命令被调用，数据：%s\n", cmds[2])
+		//data := cmds[2]
+		//cli.AddBlock(data)//TODO
 	case "printBlock":
 		fmt.Printf("打印区块链命令被调用\n")
 		cli.printBlock()
+	case "getBalance":
+		fmt.Printf("获取余额命令被调用\n")
+		cli.bc.GetBanlance(cmds[2])
+
 	default:
 		fmt.Printf("无效的命令，请检查!\n")
 		fmt.Printf(Usage)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/gob"
 	"log"
 	"time"
@@ -15,13 +16,14 @@ type Block struct {
 	Difficulity   uint64
 	Nonce         uint64
 
-	Hash []byte //当前哈希值,区块中不存在，为了方便我们添加进来
-	Data []byte //数据，目前使用字节流，v4开始使用交易代替
-
+	Hash []byte
+	//当前哈希值,区块中不存在，为了方便我们添加进来
+	//Data []byte //数据，目前使用字节流，v4开始使用交易代替
+	Transactions []*Transaction
 }
 
 //创建区块，对Block中的每一个字段填充数据即可
-func NewBlock(data string, prevBlockHash []byte) *Block {
+func NewBlock(txs []*Transaction, prevBlockHash []byte) *Block {
 	block := Block{
 		Version:       00,
 		PrevBlockHash: prevBlockHash,
@@ -30,8 +32,11 @@ func NewBlock(data string, prevBlockHash []byte) *Block {
 		Difficulity:   BITS,
 		Nonce:         10,
 		Hash:          []byte{}, //先填充为空，后续填充数据
-		Data:          []byte(data),
+
+		Transactions: txs,
+		//Data:          []byte(data),使用交易代替
 	}
+	block.HashTransaction()
 	pow := NewProofOfWork(&block)
 	hash, nonce := pow.Run()
 	block.Nonce = nonce
@@ -62,6 +67,19 @@ func Deserialize(data []byte) *Block {
 		log.Panic(err)
 	}
 	return &block
+
+}
+
+//模拟Merkle Root
+func (block *Block) HashTransaction() {
+	//我们交易的ID就是交易的哈希值，因此可以将全部交易ID拼接起来，整体做一个哈希，作为Merkle Root
+	var hashes []byte
+	for _, tx := range block.Transactions {
+		txid := tx.TXid
+		hashes = append(hashes, txid...)
+	}
+	hash := sha256.Sum256(hashes)
+	block.MerkleRoot = hash[:]
 
 }
 

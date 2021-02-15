@@ -9,8 +9,8 @@ import (
 //cli只用于解析命令
 //commands用于实现cli的具体命令
 
-func (cli *CLI) AddBlock(data string) {
-	cli.bc.addBlock(data)
+func (cli *CLI) AddBlock(txs []*Transaction) {
+	cli.bc.addBlock(txs)
 	fmt.Println("添加区块成功！\n")
 }
 
@@ -28,7 +28,7 @@ func (cli *CLI) printBlock() {
 		fmt.Printf("Difficulity:%x\n", block.Difficulity)
 		fmt.Printf("Nonce:%x\n", block.Nonce)
 		fmt.Printf("Hash:%x\n", block.Hash)
-		fmt.Printf("Data:%s\n", block.Data)
+		//fmt.Printf("Transactions:%v\n", block.Transactions)//TODO
 		pow := NewProofOfWork(block)
 		fmt.Printf("IsVaild:%v\n", pow.IsValid())
 		if bytes.Equal(block.PrevBlockHash, []byte{}) {

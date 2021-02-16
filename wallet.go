@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -59,7 +60,23 @@ func (w *WalletKeyPair) GetAdress() string {
 	payload = append(payload, checksum...)
 	address := base58.Encode(payload)
 	return address
+}
 
+func IsValidAddress(adress string) bool {
+	//1、将输入的地址解码得到25字节
+	//2、取出前21字节，运行checkSum函数，得到checksum1
+	//3、取出后4字节，得到checksum2
+	//4、比较checksum1和checksum2,如果相等则有效，反之无效
+	decodeInfo := base58.Decode(adress)
+	if len(decodeInfo) != 25 {
+		return false
+	}
+	payload := decodeInfo[0 : len(decodeInfo)-4]
+	//自己求出来的校验码
+	checksum1 := CheckSum(payload)
+	//解出来的校验码
+	checksum2 := decodeInfo[len(decodeInfo)-4:]
+	return bytes.Equal(checksum1, checksum2)
 }
 
 func HashPubKey(pubKey []byte) []byte {

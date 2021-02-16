@@ -9,8 +9,12 @@ import (
 //cli只用于解析命令
 //commands用于实现cli的具体命令
 
-func (cli *CLI) CreateBlockchain(miner string) {
-	bc := CreateBlockchain(miner)
+func (cli *CLI) CreateBlockchain(address string) {
+	if !IsValidAddress(address) {
+		fmt.Printf("%s是无效地址！\n", address)
+		return
+	}
+	bc := CreateBlockchain(address)
 	if bc == nil {
 		return
 	}
@@ -59,6 +63,18 @@ func (cli *CLI) printBlock() {
 }
 
 func (cli *CLI) Send(from, to string, amount float64, miner string, data string) {
+	if !IsValidAddress(from) {
+		fmt.Printf("%s是无效地址！\n", from)
+		return
+	}
+	if !IsValidAddress(to) {
+		fmt.Printf("%s是无效地址！\n", to)
+		return
+	}
+	if !IsValidAddress(miner) {
+		fmt.Printf("%s是无效地址！\n", miner)
+		return
+	}
 	bc := NewBlockchain()
 	if bc == nil {
 		return
@@ -81,6 +97,10 @@ func (cli *CLI) Send(from, to string, amount float64, miner string, data string)
 	fmt.Printf("挖矿成功！\n")
 }
 func (cli *CLI) GetBalance(address string) {
+	if !IsValidAddress(address) {
+		fmt.Printf("%s是无效地址！\n", address)
+		return
+	}
 	bc := NewBlockchain()
 	if bc == nil {
 		return

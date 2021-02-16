@@ -47,7 +47,7 @@ func (cli *CLI) printBlock() {
 		fmt.Printf("Difficulity:%x\n", block.Difficulity)
 		fmt.Printf("Nonce:%x\n", block.Nonce)
 		fmt.Printf("Hash:%x\n", block.Hash)
-		fmt.Printf("Data:%v\n", block.Transactions[0].TXInputs[0].Address)
+		fmt.Printf("Data:%v\n", block.Transactions[0].TXInputs[0].PublicKey)
 		pow := NewProofOfWork(block)
 		fmt.Printf("IsVaild:%v\n", pow.IsValid())
 		if bytes.Equal(block.PrevBlockHash, []byte{}) {
@@ -87,4 +87,16 @@ func (cli *CLI) GetBalance(address string) {
 	}
 	defer bc.db.Close()
 	bc.GetBalance(address)
+}
+func (cli *CLI) CreateWallet() {
+	w := NewWallets()
+	address := w.CreateWallet()
+	fmt.Printf("新的钱包地址为：%s\n", address)
+}
+func (cli *CLI) ListAddresses() {
+	ws := NewWallets()
+	addresses := ws.ListAddress()
+	for _, address := range addresses {
+		fmt.Printf("address : %s \n", address)
+	}
 }

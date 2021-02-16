@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/boltdb/bolt"
+	"lib/base58"
 	"log"
 	"os"
 )
@@ -155,7 +157,9 @@ func (it *BlockchainIterator) Next() *Block {
 
 }
 func (bc *Blockchain) GetBalance(address string) {
-	utxoinfos := bc.FindMyUtoxs(address)
+	decodeInco := base58.Decode(address)
+	pubKeyHash := decodeInco[1 : len(decodeInco)-4]
+	utxoinfos := bc.FindMyUtoxs(pubKeyHash)
 	var total = 0.0
 	for _, utxo := range utxoinfos {
 		total += utxo.Output.Value
@@ -175,7 +179,7 @@ type UTXOInfo struct {
 //2、遍历交易
 //3、遍历output
 //4、找到属于我的所有output
-func (bc *Blockchain) FindMyUtoxs(address string) []UTXOInfo {
+func (bc *Blockchain) FindMyUtoxs(pubKeyHash []byte) []UTXOInfo {
 	fmt.Printf("FindMyUtoxs\n")
 	var UTXOInfos []UTXOInfo
 	//1、遍历账本
@@ -190,7 +194,7 @@ func (bc *Blockchain) FindMyUtoxs(address string) []UTXOInfo {
 			//如果不是coinbase，说明是普通交易，才有必要进行遍历
 			if tx.IsCoinbase() == false {
 				for _, input := range tx.TXInputs {
-					if input.Address == address {
+					if bytes.Equal(HashPubKey(input.PublicKey), pubKeyHash) {
 						fmt.Printf("找到已经消耗过的output！index：%d", input.Index)
 						key := string(input.TXID)
 						spentUTXOs[key] = append(spentUTXOs[key], input.Index)
@@ -215,8 +219,8 @@ func (bc *Blockchain) FindMyUtoxs(address string) []UTXOInfo {
 
 				}
 				//4、找到属于我的所有output
-				if address == output.Address {
-					fmt.Printf("找到了属于%s的output,i : %d\n", address, i)
+				if bytes.Equal(pubKeyHash, output.PublicKeyHash) {
+					//fmt.Printf("找到了属于%s的output,i : %d\n", address, i)
 					utxoinfo := UTXOInfo{tx.TXid, int64(i), output}
 					UTXOInfos = append(UTXOInfos, utxoinfo)
 				}
@@ -233,16 +237,16 @@ func (bc *Blockchain) FindMyUtoxs(address string) []UTXOInfo {
 }
 
 //找到合适的utxos
-func (bc *Blockchain) FindSuitableUTXOs(from string, amount float64) (map[string][]int64, float64) {
+func (bc *Blockchain) FindSuitableUTXOs(pubKeyHash []byte, amount float64) (map[string][]int64, float64) {
 	validUTXOs := make(map[string][]int64) //标识有用的utxo
 	//+++++++++++++++++++++++++++
 	var resValue float64 //这些utxo存储的金额
 	/*//1、遍历账本
 	it := bc.NewIterator()
 	//这是标识已经消耗过的utxo的机构，key是交易id，value是这个id里面的output索引的数组
-	spentUTXOs := make(map[string][]int64)
-	//复用FindMyUtoxs函数，这个函数已经包含了所有的信息*/
-	utxoinfos := bc.FindMyUtoxs(from)
+	spentUTXOs := make(map[string][]int64)*/
+	//复用FindMyUtoxs函数，这个函数已经包含了所有的信息
+	utxoinfos := bc.FindMyUtoxs(pubKeyHash)
 	for _, utxoinfo := range utxoinfos {
 		key := string(utxoinfo.TXID)
 		//在这里，实现了控制逻辑

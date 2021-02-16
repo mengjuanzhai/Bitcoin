@@ -26,6 +26,8 @@ const Usage = `
 	./blockchain printBlock 打印区块链
 	./blockchain getBalance 地址 获取地址的余额
 	./blockchain send FROM TO AMOUNT MINER  DATA 转账命令
+	./blockchain createWallet 创建钱包
+	./blockchain listAddresses 打印所有的钱包地址
 `
 
 type CLI struct {
@@ -70,10 +72,26 @@ func (cli *CLI) Run() {
 		miner := cmds[5]
 		data := cmds[6]
 		cli.Send(from, to, amount, miner, data)
+	case "createWallet":
+		fmt.Printf("创建钱包命令被调用\n")
+		if len(cmds) != 2 {
+			fmt.Printf("createWallet命令发现无效参数，请检查！\n")
+			fmt.Println(Usage)
+			os.Exit(1)
+		}
+		cli.CreateWallet()
+	case "listAddresses":
+		fmt.Printf("打印钱包命令被调用\n")
+		if len(cmds) != 2 {
+			fmt.Printf("listAddresses命令发现无效参数，请检查！\n")
+			fmt.Println(Usage)
+			os.Exit(1)
+		}
+		cli.ListAddresses()
+
 	default:
 		fmt.Printf("无效的命令，请检查!\n")
 		fmt.Printf(Usage)
-
 	}
 
 }

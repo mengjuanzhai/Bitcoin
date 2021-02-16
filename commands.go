@@ -9,13 +9,32 @@ import (
 //cli只用于解析命令
 //commands用于实现cli的具体命令
 
+func (cli *CLI) CreateBlockchain(miner string) {
+	bc := CreateBlockchain(miner)
+	if bc == nil {
+		return
+	}
+	defer bc.db.Close()
+	fmt.Println("创建区块链成功！")
+}
+
 func (cli *CLI) AddBlock(txs []*Transaction) {
-	cli.bc.addBlock(txs)
-	fmt.Println("添加区块成功！\n")
+	bc := NewBlockchain()
+	if bc == nil {
+		return
+	}
+	defer bc.db.Close()
+	bc.AddBlock(txs)
+	fmt.Printf("添加区块成功！\n")
 }
 
 func (cli *CLI) printBlock() {
-	it := cli.bc.NewIterator()
+	bc := NewBlockchain()
+	if bc == nil {
+		return
+	}
+	defer bc.db.Close()
+	it := bc.NewIterator()
 	for {
 		block := it.Next()
 		fmt.Println("-------------------------------")
@@ -40,17 +59,32 @@ func (cli *CLI) printBlock() {
 }
 
 func (cli *CLI) Send(from, to string, amount float64, miner string, data string) {
+	bc := NewBlockchain()
+	if bc == nil {
+		return
+	}
+	defer bc.db.Close()
 	//创建挖矿交易
 	coinbase := NewCoinbaseTX(miner, data)
 	//创建普通交易
 	txs := []*Transaction{coinbase}
-	tx := NewTransaction(from, to, amount, cli.bc)
+	tx := NewTransaction(from, to, amount, bc)
+
 	if tx != nil {
 		txs = append(txs, tx)
 	} else {
 		fmt.Printf("发现无效交易，过滤！\n")
 	}
 	//添加到区块
-	cli.AddBlock([]*Transaction{coinbase, tx})
+	bc.AddBlock([]*Transaction{coinbase, tx})
+
 	fmt.Printf("挖矿成功！\n")
+}
+func (cli *CLI) GetBalance(address string) {
+	bc := NewBlockchain()
+	if bc == nil {
+		return
+	}
+	defer bc.db.Close()
+	bc.GetBalance(address)
 }

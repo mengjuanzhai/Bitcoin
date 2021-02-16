@@ -11,9 +11,8 @@ package main
 //6、重构代码
 
 func main() {
-	bc := NewBlockchain("miner")
-	defer bc.db.Close()
-	cil := CLI{bc}
+
+	cil := CLI{}
 	cil.Run()
 	//bc.addBlock("second block")
 	//bc.addBlock("third block")

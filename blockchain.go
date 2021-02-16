@@ -9,7 +9,7 @@ import (
 
 const GENENISISINFO = "The Times 08/Feb/2021 Chancellor on brink of second bailout for banks"
 const BLOCKCHAINNAME = "blockchain.db"
-const BLOCKBUCKET = "blockBucket"
+const BLOCKBUCKETNAME = "blockBucket"
 const LASTHASHKEY = "lastHashkey"
 
 //使用bolt改写
@@ -23,38 +23,36 @@ type Blockchain struct {
 var tail []byte
 
 //实现创建区块链的方法
-func NewBlockchain(miner string) *Blockchain {
+func CreateBlockchain(miner string) *Blockchain {
+	if IsFileExist(BLOCKCHAINNAME) {
+		fmt.Println("区块链已经存在了，不需要重复创建！")
+		return nil
+	}
 	//功能分析：
 	//1、获得数据库句柄，打开数据库，读取数据
 	db, err := bolt.Open(BLOCKCHAINNAME, 0600, nil)
 	if err != nil {
 		log.Panic()
 	}
-	//defer db.Close()
-	db.Update(func(tx *bolt.Tx) error {
-		//判断是否有bucket，如果没有，创建bucket
-		b := tx.Bucket([]byte(BLOCKBUCKET))
-		if b == nil {
-			fmt.Println("bucket不存在，准备创建！")
-			b, err = tx.CreateBucket([]byte(BLOCKBUCKET))
-			if err != nil {
-				log.Panic()
-			}
-			//写入创世块
-			//创世块中只有一个挖矿交易，只有Coinbase
-			coinbase := NewCoinbaseTX(miner, GENENISISINFO)
 
-			genesisBlock := NewBlock([]*Transaction{coinbase}, []byte{})
-			b.Put(genesisBlock.Hash, genesisBlock.Serialize()) //将区块链序列化，转换为字节流
-			//写入lastHashKey这条数据
-			b.Put([]byte(LASTHASHKEY), genesisBlock.Hash)
-			tail = genesisBlock.Hash
-			/*//测试
-			blockInfo := b.Get(genesisBlock.Hash)
-			fmt.Println("解码后的数据：", Deserialize(blockInfo))*/
-		} else {
-			tail = b.Get([]byte(LASTHASHKEY))
+	db.Update(func(tx *bolt.Tx) error {
+		//创建bucket
+		b, err := tx.CreateBucket([]byte(BLOCKBUCKETNAME))
+		if err != nil {
+			log.Panic()
 		}
+		//写入创世块
+		//创世块中只有一个挖矿交易，只有Coinbase
+		coinbase := NewCoinbaseTX(miner, GENENISISINFO)
+
+		genesisBlock := NewBlock([]*Transaction{coinbase}, []byte{})
+		b.Put(genesisBlock.Hash, genesisBlock.Serialize()) //将区块链序列化，转换为字节流
+		//写入lastHashKey这条数据
+		b.Put([]byte(LASTHASHKEY), genesisBlock.Hash)
+		tail = genesisBlock.Hash
+		/*//测试
+		blockInfo := b.Get(genesisBlock.Hash)
+		fmt.Println("解码后的数据：", Deserialize(blockInfo))*/
 
 		return nil
 	})
@@ -70,10 +68,44 @@ func NewBlockchain(miner string) *Blockchain {
 
 }
 
+//返回区块链实例
+func NewBlockchain() *Blockchain {
+	if !IsFileExist(BLOCKCHAINNAME) {
+		fmt.Println("区块链不存在，请先创建！")
+		return nil
+	}
+	//功能分析：
+	//1、获得数据库句柄，打开数据库，读取数据
+	db, err := bolt.Open(BLOCKCHAINNAME, 0600, nil)
+	if err != nil {
+		log.Panic()
+	}
+	//defer db.Close()
+	db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(BLOCKBUCKETNAME))
+		if b == nil {
+			fmt.Println("区块链bucket为空，请检查！")
+			os.Exit(1)
+		}
+		tail = b.Get([]byte(LASTHASHKEY))
+		return nil
+	})
+
+	//写入创世块
+	//写入lastHashKey这条数据
+	//更新tail为最后一个区块的哈希
+	//返回bc实例
+	//2、获取最后一个区块的哈希值
+	//填充给tail
+	//返回实例
+	return &Blockchain{db, tail}
+
+}
+
 //添加区块
-func (bc *Blockchain) addBlock(txs []*Transaction) {
+func (bc *Blockchain) AddBlock(txs []*Transaction) {
 	bc.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(BLOCKBUCKET))
+		b := tx.Bucket([]byte(BLOCKBUCKETNAME))
 		if b == nil {
 			os.Exit(1)
 		}
@@ -105,8 +137,9 @@ func (bc *Blockchain) NewIterator() *BlockchainIterator {
 func (it *BlockchainIterator) Next() *Block {
 	var block Block
 	err := it.db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(BLOCKBUCKET))
+		b := tx.Bucket([]byte(BLOCKBUCKETNAME))
 		if b == nil {
+			fmt.Println("bukect为空，请检查！")
 			os.Exit(1)
 		}
 		//真正读取数据
@@ -117,12 +150,11 @@ func (it *BlockchainIterator) Next() *Block {
 	})
 	if err != nil {
 		log.Panic()
-
 	}
 	return &block
 
 }
-func (bc *Blockchain) GetBanlance(address string) {
+func (bc *Blockchain) GetBalance(address string) {
 	utxoinfos := bc.FindMyUtoxs(address)
 	var total = 0.0
 	for _, utxo := range utxoinfos {
@@ -196,8 +228,8 @@ func (bc *Blockchain) FindMyUtoxs(address string) []UTXOInfo {
 		}
 
 	}
-
 	return UTXOInfos
+
 }
 
 //找到合适的utxos

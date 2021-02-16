@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"log"
+	"os"
 )
 
 //这是一个工具类文件
@@ -20,4 +21,15 @@ func uintToByte(num uint64) []byte {
 		log.Panic(err)
 	}
 	return buffer.Bytes()
+}
+
+//判断文件是否存在
+func IsFileExist(fileName string) bool {
+	//使用os.Stat来判断
+	//func Stat(name string) (FileInfo, error)
+	_, err := os.Stat(fileName)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return true
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/ecdsa"
 	"fmt"
 	"github.com/boltdb/bolt"
 	"lib/base58"
@@ -106,12 +107,24 @@ func NewBlockchain() *Blockchain {
 
 //添加区块
 func (bc *Blockchain) AddBlock(txs []*Transaction) {
+	//矿工得到交易时，第一时间对交易进行验证
+	//矿工如果不验证，即使挖矿成功，广播区块之后，其他验证矿工，仍然会验证每一笔交易
+	validTXs := []*Transaction{}
+	for _, tx := range txs {
+		if bc.VerifyTransaction(tx) {
+			fmt.Printf("有效交易：%x\n", tx.TXid)
+			validTXs = append(validTXs, tx)
+		} else {
+			fmt.Printf("发现无效的交易：%x\n", tx.TXid)
+		}
+
+	}
 	bc.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(BLOCKBUCKETNAME))
 		if b == nil {
 			os.Exit(1)
 		}
-		block := NewBlock(txs, bc.tail)
+		block := NewBlock(validTXs, bc.tail)
 		b.Put(block.Hash, block.Serialize())
 		b.Put([]byte(LASTHASHKEY), block.Hash)
 		bc.tail = block.Hash
@@ -317,6 +330,67 @@ func (bc *Blockchain) FindSuitableUTXOs(pubKeyHash []byte, amount float64) (map[
 
 	return validUTXOs, resValue
 }
+func (bc *Blockchain) SignTransaction(tx *Transaction, privateKey *ecdsa.PrivateKey) {
+	//1、遍历账本找到所有的交易
+	prevTxs := make(map[string]Transaction)
+	//遍历tx的inputs,通过id去查找所应用的交易
+	for _, input := range tx.TXInputs {
+		prevTx := bc.FindTransaction(input.TXID)
+		if prevTx == nil {
+			fmt.Printf("没有找到交易：%x\n", input.TXID)
+		} else {
+			//把找到的引用交易保存起来
+			//0x222
+			//0x333
+			prevTxs[string(input.TXID)] = *prevTx
+		}
+	}
+	tx.Sign(privateKey, prevTxs)
+}
+func (bc *Blockchain) VerifyTransaction(tx *Transaction) bool {
+	//校验时，如果是挖矿交易coinbase,直接返回true
+	if tx.IsCoinbase() {
+		return true
+	}
+	//1、遍历账本找到所有的交易
+	prevTxs := make(map[string]Transaction)
+	//遍历tx的inputs,通过id去查找所应用的交易
+	for _, input := range tx.TXInputs {
+		prevTx := bc.FindTransaction(input.TXID)
+		if prevTx == nil {
+			fmt.Printf("没有找到交易：%x\n", input.TXID)
+		} else {
+			//把找到的引用交易保存起来
+			//0x222
+			//0x333
+			prevTxs[string(input.TXID)] = *prevTx
+		}
+	}
+	return tx.Verify(prevTxs)
+
+}
+func (bc *Blockchain) FindTransaction(txid []byte) *Transaction {
+	//遍历区块链的交易
+	//通过对比id来识别
+	it := bc.NewIterator()
+	for {
+		block := it.Next()
+		for _, tx := range block.Transactions {
+			if bytes.Equal(tx.TXid, txid) {
+				fmt.Printf("找到所引用交易：%x\n", tx.TXid)
+				return tx
+			}
+			if len(block.PrevBlockHash) == 0 {
+				break
+			}
+		}
+
+	}
+}
+
+//矿工校验流程
+//1、找到交易input所引用的所有交易的prevTXs
+//2、对交易进行校验
 
 /*
 //创建区块链，使用数组进行模拟

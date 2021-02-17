@@ -28,6 +28,7 @@ const Usage = `
 	./blockchain send FROM TO AMOUNT MINER  DATA 转账命令
 	./blockchain createWallet 创建钱包
 	./blockchain listAddresses 打印所有的钱包地址
+	./blockchain printTx 打印所有交易
 `
 
 type CLI struct {
@@ -88,6 +89,14 @@ func (cli *CLI) Run() {
 			os.Exit(1)
 		}
 		cli.ListAddresses()
+	case "printTx":
+		fmt.Printf("打印钱包命令被调用\n")
+		if len(cmds) != 2 {
+			fmt.Printf("printTx命令发现无效参数，请检查！\n")
+			fmt.Println(Usage)
+			os.Exit(1)
+		}
+		cli.PrintTx()
 
 	default:
 		fmt.Printf("无效的命令，请检查!\n")

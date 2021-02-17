@@ -12,6 +12,7 @@ import (
 	"log"
 	"math/big"
 	"os"
+	"strings"
 )
 
 //交易输入
@@ -178,6 +179,9 @@ func NewTransaction(from string, to string, amount float64, bc *Blockchain) *Tra
 //第二个参数是这个交易input所引用的所有交易
 func (tx *Transaction) Sign(privKey *ecdsa.PrivateKey, privTXs map[string]Transaction) {
 	fmt.Printf("对交易进行签名...\n")
+	if tx.IsCoinbase() {
+		return
+	}
 	//1、拷贝一份交易，做相应裁剪：把每一个input的Sig和pubKey设置为nil,output不做改变
 	txCopy := tx.TrimmedCopy()
 	//2、遍历txCopy.inputs,把这个input所引用的output的公钥哈希拿过来，赋值给input的pubKey
@@ -238,6 +242,8 @@ func (tx *Transaction) Verify(privTXs map[string]Transaction) bool {
 		//5、还原签名的数据
 		txCopy.SetTXID()
 		verifyData := txCopy.TXid
+		//清理动作，重要！
+		txCopy.TXInputs[i].PublicKey = nil
 		fmt.Printf("要校验的数据， VerifyData:%x\n", verifyData)
 		//6、校验
 		//还原签名为r,s
@@ -269,4 +275,27 @@ func (tx *Transaction) Verify(privTXs map[string]Transaction) bool {
 		}
 	}
 	return true
+}
+
+func (tx *Transaction) String() string {
+	var lines []string
+
+	lines = append(lines, fmt.Sprintf("--- Transaction %x:", tx.TXid))
+
+	for i, input := range tx.TXInputs {
+
+		lines = append(lines, fmt.Sprintf("     Input %d:", i))
+		lines = append(lines, fmt.Sprintf("       TXID:      %x", input.TXID))
+		lines = append(lines, fmt.Sprintf("       Out:       %d", input.Index))
+		lines = append(lines, fmt.Sprintf("       Signature: %x", input.Signature))
+		lines = append(lines, fmt.Sprintf("       PubKey:    %x", input.PublicKey))
+	}
+
+	for i, output := range tx.TXoutputs {
+		lines = append(lines, fmt.Sprintf("     Output %d:", i))
+		lines = append(lines, fmt.Sprintf("       Value:  %f", output.Value))
+		lines = append(lines, fmt.Sprintf("       Script: %x", output.PublicKeyHash))
+	}
+
+	return strings.Join(lines, "\n")
 }

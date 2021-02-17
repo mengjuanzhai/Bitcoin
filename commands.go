@@ -120,3 +120,24 @@ func (cli *CLI) ListAddresses() {
 		fmt.Printf("address : %s \n", address)
 	}
 }
+func (cli *CLI) PrintTx() {
+	bc := NewBlockchain()
+	if bc == nil {
+		return
+	}
+	defer bc.db.Close()
+	it := bc.NewIterator()
+	for {
+		block := it.Next()
+		fmt.Printf("\n+++++++++++++++++++++新的区块+++++++++++++++++++++\n")
+		for _, tx := range block.Transactions {
+			fmt.Printf("tx : %v\n", tx)
+
+		}
+		if bytes.Equal(block.PrevBlockHash, []byte{}) {
+			fmt.Println("区块链遍历结束！")
+			break
+		}
+	}
+
+}
